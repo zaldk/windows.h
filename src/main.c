@@ -4,15 +4,21 @@
 #include <time.h>
 #include <X11/Xlib.h>
 
-#define WIDTH  1600
-#define HEIGHT 900
+#define WIDTH  800
+#define HEIGHT 600
 
-typedef struct { uint8_t r, g, b, a } Color;
+typedef struct {
+    uint8_t b, g, r, a;
+} Color;
 
 int main(void) {
     Color pixels[WIDTH*HEIGHT] = {0};
     for (int i = 0; i < WIDTH*HEIGHT; i++) {
-        pixels[i] = (Color){ .r=0x00, .g=0x00, .b=0x00, .a=0xFF };
+        pixels[i] = (Color){ .r=0xFF, .g=0x00, .b=0x00, .a=0xFF };
+
+        if (i > WIDTH*HEIGHT/2) {
+            pixels[i] = (Color){ .r=0x00, .g=0xFF, .b=0x00, .a=0xFF };
+        }
     }
 
     Display *display = XOpenDisplay(NULL);
