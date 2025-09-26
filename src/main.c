@@ -61,21 +61,25 @@ int main(void) {
     Atom wm_delete_window = XInternAtom(display, "WM_DELETE_WINDOW", False);
     XSetWMProtocols(display, window, &wm_delete_window, 1);
 
-    XSelectInput(display, window, KeyPressMask | PointerMotionMask);
+    XSelectInput(display, window, KeyPressMask | PointerMotionMask | StructureNotifyMask);
 
     XMapWindow(display, window);
 
+    clock_t frame_start = 0, frame_end = 0;
+    double frame_dt = 0.0, frame_time_acc = 0.0;
     int quit = 0, i = 0;
     while (!quit) {
+        frame_start = clock();
         while (XPending(display) > 0) {
             XEvent event = {0};
             XNextEvent(display, &event);
             switch (event.type) {
                 case KeyPress: {
                     switch (XLookupKeysym(&event.xkey, 0)) {
-                        case 'q':
+                        case 'q': {
                             quit = 1;
                             break;
+                        }
                     }
                     break;
                 }
@@ -92,6 +96,17 @@ int main(void) {
                     break;
                 }
 
+                case ConfigureNotify: {
+                    int new_width = event.xconfigure.width;
+                    int new_height = event.xconfigure.height;
+                    printf("Window resized: x=%d, y=%d, width=%d, height=%d\n",
+                           event.xconfigure.x,
+                           event.xconfigure.y,
+                           new_width,
+                           new_height);
+                    break;
+                }
+
                 // default: {
                 //     printf("[%d]\tEvent.type=%d\n", time(NULL), event.type);
                 // }
@@ -100,6 +115,18 @@ int main(void) {
 
         XPutImage(display, window, gc, image, 0, 0, 0, 0, WIDTH, HEIGHT);
         i += 1;
+        frame_end = clock();
+        frame_dt = (double)(frame_end - frame_start) / CLOCKS_PER_SEC;
+        frame_time_acc += frame_dt;
+        if (frame_time_acc > 1.0) {
+            frame_time_acc -= 1.0;
+
+        for (int i = 0; i < WIDTH*HEIGHT; i++) {
+            pixels[i] = (Color){ .r=0x80, .g=0x80, .b=0x80, .a=0xFF };
+        }
+            printf("FRAME DELTA TIME :: %lf\n", frame_dt);
+            printf("             FPS :: %lf\n", 1.0/frame_dt);
+        }
     }
 
     XCloseDisplay(display);
